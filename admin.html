@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Administrativo - Altas Médicas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      background-color: transparent;
+      overflow-x: hidden;
+    }
+
+    video#bgVideo {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: cover;
+      z-index: -2;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: -1;
+    }
+
+    .navbar {
+      background-color: rgba(255, 255, 255, 0.95) !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-custom {
+      border-radius: 50px;
+      padding: 0.5rem 1.2rem;
+    }
+
+    .card {
+      border: none;
+      border-radius: 1rem;
+      background-color: rgba(255, 255, 255, 0.95);
+      color: #000;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .highlight-box {
+      background: linear-gradient(135deg, #0d6efd, #6610f2);
+      color: white;
+      text-align: center;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .highlight-box i {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn-download {
+      background-color: #198754;
+      color: #fff;
+    }
+
+    .btn-logout {
+      background-color: #dc3545;
+      color: #fff;
+    }
+
+    .table {
+      background-color: white;
+      color: #000;
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+
+    .table thead {
+      background-color: #0d6efd;
+      color: #fff;
+    }
+
+    .table tbody tr:hover {
+      background-color: #f1f3f5;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Fondo de video y capa oscura -->
+  <video autoplay muted loop id="bgVideo">
+    <source src="https://media.istockphoto.com/id/1277734677/es/vídeo/experiencia-en-el-ciclo-de-atención-médica-y-servicios-de-tecnología-médica.mp4?s=mp4-640x640-is&k=20&c=GsJjkKJMLaslJP-Q5piFTTIKKw9llqrF1233xV5CxX4=" type="video/mp4">
+    Tu navegador no soporta el video.
+  </video>
+  <div class="overlay"></div>
+
+  <!-- Barra de navegación -->
+  <nav class="navbar navbar-expand-lg px-4 py-2">
+    <a class="navbar-brand fw-bold" href="#">Panel Administrativo</a>
+    <div class="ms-auto">
+      <button class="btn btn-download btn-custom me-2" onclick="descargarCSV()">
+        <i class="fas fa-download me-1"></i> Descargar resultados
+      </button>
+      <button class="btn btn-logout btn-custom" onclick="cerrarSesion()">
+        <i class="fas fa-sign-out-alt me-1"></i> Salir
+      </button>
+    </div>
+  </nav>
+
+  <!-- Contenido -->
+  <div class="container mt-4 mb-5">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="highlight-box">
+          <i class="fas fa-hospital-user"></i>
+          <h5>Total Altas</h5>
+          <p class="display-4 fw-bold" id="totalAltas">--</p>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="card p-4">
+          <h5 class="card-title">Altas por Día</h5>
+          <div class="chart-container">
+            <canvas id="altasChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-12">
+        <div class="card p-4">
+          <h5 class="card-title mb-3">Pacientes Dados de Alta</h5>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Fecha de Alta</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaPacientes">
+                <!-- Filas dinámicas -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+  const tablaPacientes = document.getElementById('tablaPacientes');
+  let datosAltas = [];
+
+  window.addEventListener('DOMContentLoaded', () => {
+    fetchAltas();
+  });
+
+  function fetchAltas() {
+    fetch('http://localhost:3000/api/altas')
+      .then(response => response.json())
+      .then(data => {
+        datosAltas = data;
+        renderizarTabla();
+        actualizarResumen(data);
+      })
+      .catch(error => console.error('Error al cargar las altas:', error));
+  }
+
+  function renderizarTabla() {
+    tablaPacientes.innerHTML = '';
+    datosAltas.forEach((alta) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${alta.nombre}</td>
+        <td>${alta.fecha.split('T')[0]}</td>
+        <td>${alta.estado || 'Completado'}</td>
+        <td><span class="text-muted">Visualización</span></td>
+      `;
+      tablaPacientes.appendChild(row);
+    });
+  }
+
+  function actualizarResumen(data) {
+    document.getElementById('totalAltas').textContent = data.length;
+
+    const conteoPorFecha = {};
+    data.forEach(item => {
+      const fecha = item.fecha.split('T')[0];
+      conteoPorFecha[fecha] = (conteoPorFecha[fecha] || 0) + 1;
+    });
+
+    const fechas = Object.keys(conteoPorFecha).sort();
+    const cantidades = fechas.map(f => conteoPorFecha[f]);
+
+    const ctx = document.getElementById('altasChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: fechas,
+        datasets: [{
+          label: 'Altas por Día',
+          data: cantidades,
+          borderColor: '#0d6efd',
+          fill: false,
+          tension: 0.1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function descargarCSV() {
+    const encabezados = ['Nombre', 'Fecha de Alta', 'Estado'];
+    const filas = datosAltas.map(item => [item.nombre, item.fecha.split('T')[0], item.estado || 'Completado']);
+
+    let csvContent = 'data:text/csv;charset=utf-8,';
+    csvContent += encabezados.join(',') + '\n';
+    filas.forEach(fila => {
+      csvContent += fila.join(',') + '\n';
+    });
+
+    const enlace = document.createElement('a');
+    enlace.setAttribute('href', encodeURI(csvContent));
+    enlace.setAttribute('download', 'altas_medicas.csv');
+    document.body.appendChild(enlace);
+    enlace.click();
+    document.body.removeChild(enlace);
+  }
+
+  function cerrarSesion() {
+    alert("Sesión cerrada.");
+    window.location.href = '/login';
+  }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Citas Médicas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .video-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    .navbar.glass {
+      background-color: rgba(30, 61, 89, 0.6) !important;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .section {
+      padding-top: 7rem;
+      padding-bottom: 2rem;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      width: 100%;
+      max-width: 500px;
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+      color: #1e3d59;
+      margin: 1rem auto;
+    }
+
+    .glass-card h3 {
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .glass-card {
+        padding: 1.5rem;
+      }
+
+      .navbar .container {
+        justify-content: center !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <video autoplay muted loop class="video-bg">
+    <source src="https://media.istockphoto.com/id/1277734677/es/vídeo/experiencia-en-el-ciclo-de-atención-médica-y-servicios-de-tecnología-médica.mp4?s=mp4-640x640-is&k=20&c=GsJjkKJMLaslJP-Q5piFTTIKKw9llqrF1233xV5CxX4=" type="video/mp4">
+  </video>
+
+  <!-- Navbar centrada con colapsado para móviles -->
+  <nav class="navbar navbar-expand-lg navbar-dark glass fixed-top">
+    <div class="container">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+        <ul class="navbar-nav text-center">
+          <li class="nav-item">
+            <a class="nav-link" href="paciente.html">Inicio</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="historia_pac.html">Historia Clínica</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="post_altapac.html">Altas del paceinte</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="Index.html">Salir</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenido de la página -->
+  <div class="section container">
+    <div id="citas-container" class="row justify-content-center"></div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const container = document.getElementById('citas-container');
+      const usuario = JSON.parse(localStorage.getItem('usuario'));
+
+      if (!usuario || !usuario.documento) {
+        container.innerHTML = '<p class="text-white text-center">No se encontró el usuario.</p>';
+        console.warn('No se encontró documento en el usuario:', usuario);
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://localhost:3000/api/citas/${usuario.documento}`);
+        
+        if (!res.ok) throw new Error(`Error de servidor: ${res.status}`);
+
+        const citas = await res.json();
+
+        if (citas.length === 0) {
+          container.innerHTML = '<p class="text-white text-center">No tienes citas registradas.</p>';
+          return;
+        }
+
+        citas.forEach(cita => {
+          const card = document.createElement('div');
+          card.className = 'glass-card';
+          card.innerHTML = `
+            <h3>${new Date(cita.fecha).toLocaleDateString('es-ES')}</h3>
+            <p><strong>No Documento:</strong> ${cita.no_documento}</p>
+            <p><strong>Nombre del paciente:</strong> ${cita.paciente}</p>
+            <p><strong>Fecha de la cita:</strong> ${cita.fecha}</p>
+            <p><strong>Hora:</strong> ${cita.hora}</p>
+            <p><strong>Motivo de la cita:</strong> ${cita.motivo}</p>
+            <p><strong>Doctor:</strong> ${cita.doctor}</p>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (error) {
+        console.error('Error al cargar citas:', error);
+        container.innerHTML = '<p class="text-white text-center">Error al cargar las citas. Intenta más tarde.</p>';
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

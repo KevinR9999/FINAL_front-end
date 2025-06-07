@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Citas Médicas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    .video-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      min-width: 100%;
+      min-height: 100%;
+      z-index: -1;
+      object-fit: cover;
+    }
+    .modal-content-custom {
+      background: white;
+      padding: 2em;
+      border-radius: 10px;
+    }
+    .card-header {
+      background: linear-gradient(90deg, #004e92, #000428);
+      color: white;
+      padding: 1.1rem; /* Aumenta o reduce el relleno interno */
+      height: auto; /* O establece un alto fijo si quieres */
+    }
+    .table th, .table td {
+      text-align: center;
+      vertical-align: middle;
+    }
+    .table thead {
+      background-color: #1e3d59;
+      color: white;
+    }
+    .table tbody tr:hover {
+      background-color: #f1f1f1;
+    }
+    .table {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1, h5 {
+      font-weight: 600;
+    }
+    input, .form-control {
+      font-size: 15px;
+    }
+    .btn-outline-primary:hover, .btn-outline-secondary:hover, .btn-outline-success:hover {
+      background-color: #1e3d59;
+      color: white;
+    }
+    .btn-close-white {
+      filter: invert(1);
+    }
+    .botones-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: flex-start;
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h1.titulo-citas {
+  color: #4d5053; /* Azul personalizado */
+}
+  </style>
+</head>
+<body class="bg-light">
+  <video autoplay muted loop class="video-bg">
+    <source src="https://media.istockphoto.com/id/1277734677/es/v%C3%ADdeo/experiencia-en-el-ciclo-de-atenci%C3%B3n-m%C3%A9dica-y-servicios-de-tecnolog%C3%ADa-m%C3%A9dica.mp4?s=mp4-640x640-is&k=20&c=GsJjkKJMLaslJP-Q5piFTTIKKw9llqrF1233xV5CxX4=" type="video/mp4" />
+    Tu navegador no soporta videos HTML5.
+  </video>
+
+  <div class="container py-5">
+    <h1 class="text-center mb-4 titulo-citas">Citas Médicas</h1>
+
+    <div class="card shadow rounded mb-4">
+      <div class="card-header">
+      </div>
+
+      <div class="p-3 d-flex justify-content-start">
+        <div class="input-group" style="max-width: 350px;">
+          <span class="input-group-text bg-primary text-white"><i class="bi bi-search"></i></span>
+          <input type="text" id="filtroDocumento" class="form-control" placeholder="Filtrar por número de documento" oninput="filtrarCitas()" />
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle mb-0" id="tablaCitasMain">
+            <thead>
+              <tr>
+                <th>No documento</th>
+                <th>Paciente</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Motivo</th>
+                <th>Doctor</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaCitas"></tbody>
+          </table>
+        </div>
+        <nav class="p-3">
+          <ul class="pagination justify-content-center" id="paginacion"></ul>
+        </nav>
+      </div>
+    </div>
+
+    <div class="botones-container">
+      <button class="btn btn-outline-primary btn-lg" onclick="nuevaCita()">+ Nueva Cita</button>
+      <button type="button" class="btn btn-outline-secondary btn-lg" onclick="window.location.href='doctor.html?seccion=sectionSelect'">Volver al Menú</button>
+      <button class="btn btn-outline-success btn-lg" onclick="exportarExcel()">Exportar a Excel</button>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalCita" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-custom">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalCitaLabel">Agregar Cita</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formCita">
+            <div class="mb-3">
+              <input type="text" id="noDocumento" class="form-control" placeholder="No documento" required pattern="^\d{6,10}$" title="Debe contener entre 6 y 10 dígitos" />
+            </div>
+            <div class="mb-3">
+              <input type="text" id="paciente" class="form-control" placeholder="Nombre del paciente" required pattern="^[a-zA-Z\s]{3,50}$" title="Debe contener solo letras (mínimo 3)" />
+            </div>
+            <div class="mb-3">
+              <input type="date" id="fecha" class="form-control" required />
+            </div>
+            <div class="mb-3">
+              <input type="time" id="hora" class="form-control" required />
+            </div>
+            <div class="mb-3">
+              <input type="text" id="motivo" class="form-control" placeholder="Motivo de la cita" required minlength="5" />
+            </div>
+            <div class="mb-3">
+              <input type="text" id="doctor" class="form-control" placeholder="Nombre del doctor" required pattern="^[a-zA-Z\s]{3,50}$" title="Debe contener solo letras (mínimo 3)" />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" onclick="guardarCambios()">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let citasMedicas = [];
+    let citaEditandoId = null;
+    const citasPorPagina = 5;
+    let paginaActual = 1;
+
+    function mostrarCitas() {
+      fetch('http://localhost:3000/api/citas')
+        .then(res => res.json())
+        .then(data => {
+          citasMedicas = data;
+          renderCitas();
+        })
+        .catch(error => console.error('Error al cargar citas:', error));
+    }
+
+    function filtrarCitas() {
+      const filtro = document.getElementById("filtroDocumento").value.trim().toLowerCase();
+      const citasFiltradas = citasMedicas.filter(cita =>
+        cita.no_documento.toString().toLowerCase().includes(filtro)
+      );
+      renderCitas(citasFiltradas);
+    }
+
+    function renderCitas(citas = citasMedicas) {
+      const tabla = document.getElementById("tablaCitas");
+      tabla.innerHTML = "";
+      const inicio = (paginaActual - 1) * citasPorPagina;
+      const fin = inicio + citasPorPagina;
+      const citasPagina = citas.slice(inicio, fin);
+
+      citasPagina.forEach((cita, index) => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${cita.no_documento}</td>
+            <td>${cita.paciente}</td>
+            <td>${cita.fecha}</td>
+            <td>${cita.hora}</td>
+            <td>${cita.motivo}</td>
+            <td>${cita.doctor || ''}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary me-1" onclick="editarCita(${inicio + index})">
+                <i class="bi bi-pencil-square"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="eliminarCita('${cita.no_documento}')">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      renderPaginacion(citas.length);
+    }
+
+    function renderPaginacion(totalItems = citasMedicas.length) {
+      const totalPaginas = Math.ceil(totalItems / citasPorPagina);
+      const paginacion = document.getElementById("paginacion");
+      paginacion.innerHTML = "";
+
+      for (let i = 1; i <= totalPaginas; i++) {
+        paginacion.innerHTML += `
+          <li class="page-item ${i === paginaActual ? 'active' : ''}">
+            <button class="page-link" onclick="cambiarPagina(${i})">${i}</button>
+          </li>
+        `;
+      }
+    }
+
+    function cambiarPagina(pagina) {
+      paginaActual = pagina;
+      filtrarCitas();
+    }
+
+    function nuevaCita() {
+      citaEditandoId = null;
+      document.getElementById("formCita").reset();
+      document.getElementById("modalCitaLabel").textContent = "Agregar Nueva Cita";
+      new bootstrap.Modal(document.getElementById('modalCita')).show();
+    }
+
+    function editarCita(index) {
+      const cita = citasMedicas[index];
+      citaEditandoId = cita.id;
+      document.getElementById("modalCitaLabel").textContent = "Editar Cita";
+      document.getElementById("noDocumento").value = cita.no_documento;
+      document.getElementById("paciente").value = cita.paciente;
+      document.getElementById("fecha").value = cita.fecha;
+      document.getElementById("hora").value = cita.hora;
+      document.getElementById("motivo").value = cita.motivo;
+      document.getElementById("doctor").value = cita.doctor;
+      new bootstrap.Modal(document.getElementById('modalCita')).show();
+    }
+
+    function guardarCambios() {
+      const form = document.getElementById("formCita");
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const nuevaCita = {
+        no_documento: document.getElementById("noDocumento").value,
+        paciente: document.getElementById("paciente").value,
+        fecha: document.getElementById("fecha").value,
+        hora: document.getElementById("hora").value,
+        motivo: document.getElementById("motivo").value,
+        doctor: document.getElementById("doctor").value
+      };
+
+      const url = citaEditandoId
+        ? `http://localhost:3000/api/citas/${citaEditandoId}`
+        : "http://localhost:3000/api/cita";
+
+      const metodo = citaEditandoId ? "PUT" : "POST";
+
+      fetch(url, {
+        method: metodo,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nuevaCita),
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("Error al guardar la cita");
+          return res.json();
+        })
+        .then(() => {
+          bootstrap.Modal.getInstance(document.getElementById('modalCita')).hide();
+          mostrarCitas();
+          citaEditandoId = null;
+        })
+        .catch(error => {
+          console.error("Error al guardar cita:", error);
+          alert("Hubo un error al guardar la cita.");
+        });
+    }
+
+    function eliminarCita(no_documento) {
+      if (confirm("¿Estás seguro de eliminar esta cita?")) {
+        fetch(`http://localhost:3000/api/citas/documento/${no_documento}`, { method: "DELETE" })
+          .then(res => {
+            if (!res.ok) throw new Error("Error al eliminar la cita");
+            mostrarCitas();
+          })
+          .catch(error => {
+            console.error("Error al eliminar cita:", error);
+            alert("Hubo un error al eliminar la cita.");
+          });
+      }
+    }
+
+    function exportarExcel() {
+      const tabla = document.getElementById("tablaCitasMain");
+      const wb = XLSX.utils.table_to_book(tabla, { sheet: "Citas" });
+      XLSX.writeFile(wb, "Citas_Medicas.xlsx");
+    }
+
+    mostrarCitas();
+  </script>
+</body>
+</html>

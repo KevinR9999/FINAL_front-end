@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Médico</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+  }
+
+  .video-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -2;
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: -1;
+  }
+
+  #sectionSelect {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    position: relative;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+
+  #sectionSelect .glass-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    border-radius: 1rem;
+    padding: 2rem 3rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    max-width: 450px;
+    width: 100%;
+    text-align: center;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    color: white;
+    animation: fadeIn 0.8s ease-in-out;
+    text-align: center;
+  }
+
+  .btn-modern {
+    background-color: #2f2e7d;
+    border: none;
+    border-radius: 2rem;
+    padding: 0.7rem 1.5rem;
+    transition: all 0.3s ease;
+    color: white;
+    font-weight: 500;
+  }
+
+  .btn-modern:hover {
+    background-color: #1b5e20;
+    transform: scale(1.05);
+  }
+
+  .option-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.8rem 1.2rem;
+  border-radius: 1rem;
+  text-decoration: none;
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem; /* 👈 Espacio entre botones */
+}
+
+
+  .option-btn:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    transform: scale(1.03);
+    color: #fff;
+  }
+
+  .logout-button {
+    background-color: #ff4d4f;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 2rem;
+    color: white;
+    margin-top: 2rem;
+    transition: all 0.3s ease;
+  }
+
+  .logout-button:hover {
+    background-color: #d9363e;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+</head>
+<body>
+
+  <video autoplay muted loop class="video-bg">
+    <source src="https://media.istockphoto.com/id/1277734677/es/vídeo/experiencia-en-el-ciclo-de-atención-médica-y-servicios-de-tecnología-médica.mp4?s=mp4-640x640-is&k=20&c=GsJjkKJMLaslJP-Q5piFTTIKKw9llqrF1233xV5CxX4=" type="video/mp4">
+    Tu navegador no soporta videos HTML5.
+  </video>
+  <div class="overlay"></div>
+
+  <!-- Pantalla de bienvenida -->
+  <div id="welcome" class="d-flex justify-content-center align-items-center vh-100">
+    <div class="glass-card text-center">
+      <h1 class="mb-4">Bienvenido, Doc</h1>
+      <button class="btn-modern" onclick="showSectionSelect()">Entrar</button>
+    </div>
+  </div>
+
+  <!-- Selección de módulo -->
+  <div id="sectionSelect" class="d-none justify-content-center align-items-center vh-100">
+    <div class="glass-card">
+      <h2 class="mb-4">¿Qué sección deseas visitar?</h2>
+      <div class="d-flex flex-wrap justify-content-center">
+        <a class="option-btn" href="post_alta.html">🩺 Post Alta</a>
+        <a class="option-btn" href="historia.html">📋 Historias Clínicas</a>
+        <a class="option-btn" href="citas.html">📅 Citas Médicas</a>
+      </div>
+      <button class="logout-button" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function showSectionSelect() {
+      document.getElementById('welcome').classList.add('d-none');
+      document.getElementById('sectionSelect').classList.remove('d-none');
+      document.getElementById('sectionSelect').classList.add('d-flex');
+    }
+
+    function logout() {
+      window.location.href = 'Index.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+  // Oculta la sección "Bienvenido Doc"
+  const bienvenida = document.getElementById('welcome');
+  const sectionSelect = document.getElementById('sectionSelect');
+
+  // Obtener parámetro 'seccion' de la URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const seccion = urlParams.get('seccion');
+
+  if (seccion === 'sectionSelect') {
+    if (bienvenida) bienvenida.classList.add('d-none'); // ocultar bienvenida
+    if (sectionSelect) sectionSelect.classList.remove('d-none'); // mostrar sección deseada
+  }
+});
+
+  </script>
+</body>
+</html>

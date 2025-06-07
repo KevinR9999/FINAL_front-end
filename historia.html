@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Historias Clínicas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: transparent;
+    }
+    .video-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+    .card-header {
+      background: linear-gradient(90deg, #004e92, #000428);
+      color: white;
+      padding: 1.1rem; /* Aumenta o reduce el relleno interno */
+      height: auto; /* O establece un alto fijo si quieres */
+    }
+    .form-control:focus {
+      border-color: #004e92;
+      box-shadow: 0 0 0 0.2rem rgba(0, 78, 146, 0.25);
+    }
+    .modal-content-custom {
+      background: white;
+      padding: 2em;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+    .filter-sort {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-editar {
+  background-color: #9b98a1; /* púrpura */
+  color: white;
+  border: none;
+}
+.btn-editar:hover {
+  background-color: #38da07;
+}
+
+.card {
+  margin-top: 40px;
+}
+
+h1.titulo-historias {
+  color: #4d5053; /* Azul personalizado */
+}
+
+
+  </style>
+</head>
+<body>
+  <video autoplay muted loop class="video-bg">
+    <source src="https://media.istockphoto.com/id/1277734677/es/vídeo/experiencia-en-el-ciclo-de-atención-médica-y-servicios-de-tecnología-médica.mp4?s=mp4-640x640-is&k=20&c=GsJjkKJMLaslJP-Q5piFTTIKKw9llqrF1233xV5CxX4=" type="video/mp4">
+  </video>
+
+  <div class="container py-5">
+    <h1 class="text-center mb-4 titulo-historias">Historias Clínicas</h1>
+  
+    <div class="card shadow rounded mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-striped align-middle mb-0">
+           <thead class="table-light">
+
+                <td colspan="7">
+      <div class="input-group" style="max-width: 300px;">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text" id="busquedaDocumento" class="form-control" placeholder="No documento" onkeyup="filtrarPorDocumento()">
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <th>Nombre</th>
+    <th>Edad</th>
+    <th>Documento</th>
+    <th>Diagnóstico</th>
+    <th>Historial</th>
+    <th>Fecha</th>
+    <th>Acciones</th>
+  </tr>
+  <tr>
+</thead>
+            <tbody id="tablaPacientes"></tbody>
+          </table>
+        </div>
+        <nav class="mt-3">
+          <ul class="pagination justify-content-center" id="paginacion"></ul>
+        </nav>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-start gap-3 mt-4 flex-wrap">
+  <a href="doctor.html?seccion=sectionSelect" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left-circle"></i> Volver
+  </a>
+  <button class="btn btn-outline-primary" onclick="crearNuevaHistoria()">
+    <i class="bi bi-plus-circle"></i> Nueva Historia
+  </button>
+  <button class="btn btn-outline-success" onclick="exportarCSV()">
+    <i class="bi bi-download"></i> Exportar CSV
+  </button>
+</div>
+  </div>
+
+  <div class="modal fade" id="modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-custom">
+        <div class="modal-header">
+          <h5 class="modal-title">Historia Clínica</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3"><input type="text" id="nombre" class="form-control" placeholder="Nombre completo"></div>
+          <div class="mb-3"><input type="number" id="edad" class="form-control" placeholder="Edad" min="0" max="120"></div>
+          <div class="mb-3"><input type="text" id="documento" class="form-control" placeholder="Documento de identidad" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)"></div>
+          <div class="mb-3"><input type="text" id="diagnostico" class="form-control" placeholder="Diagnóstico"></div>
+          <div class="mb-3"><textarea id="historial" class="form-control" rows="4" placeholder="Historial clínico..."></textarea></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="guardarCambios()">Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let historiasClinicas = [];
+    let historiasFiltradas = [];
+    let paginaActual = 1;
+    const porPagina = 5;
+    let indexEdicion = null;
+
+    function mostrarPacientes(data = historiasClinicas) {
+      const tabla = document.getElementById('tablaPacientes');
+      const inicio = (paginaActual - 1) * porPagina;
+      const fin = inicio + porPagina;
+      const pagina = data.slice(inicio, fin);
+      tabla.innerHTML = pagina.map((p, index) => `
+        <tr>
+          <td>${p.nombre}</td>
+          <td>${p.edad}</td>
+          <td>${p.documento}</td>
+          <td>${p.diagnostico}</td>
+          <td>${p.historial}</td>
+          <td>${p.fecha}</td>
+          <td>
+            <button class="btn btn-sm btn-editar" onclick="editarHistoria(${index + inicio})"><i class="bi bi-pencil-square"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="eliminarHistoria(${index + inicio})"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>`).join('');
+      generarPaginacion(data.length);
+    }
+
+    function generarPaginacion(total) {
+      const totalPaginas = Math.ceil(total / porPagina);
+      const pag = document.getElementById('paginacion');
+      pag.innerHTML = '';
+      for (let i = 1; i <= totalPaginas; i++) {
+        pag.innerHTML += `<li class="page-item ${paginaActual === i ? 'active' : ''}"><a class="page-link" href="#" onclick="cambiarPagina(${i})">${i}</a></li>`;
+      }
+    }
+
+    function cambiarPagina(nuevaPagina) {
+      paginaActual = nuevaPagina;
+      mostrarPacientes(historiasFiltradas.length ? historiasFiltradas : historiasClinicas);
+    }
+
+    function filtrarPorDocumento() {
+      const filtro = document.getElementById('busquedaDocumento').value.toLowerCase();
+      historiasFiltradas = historiasClinicas.filter(p => p.documento.toLowerCase().includes(filtro));
+      paginaActual = 1;
+      mostrarPacientes(historiasFiltradas);
+    }
+
+    function exportarCSV() {
+      const data = historiasFiltradas.length ? historiasFiltradas : historiasClinicas;
+      let csv = 'Nombre,Edad,Documento,Diagnóstico,Historial,Fecha\n';
+      data.forEach(p => {
+        csv += `${p.nombre},${p.edad},${p.documento},${p.diagnostico},"${p.historial}",${p.fecha}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'historias_clinicas.csv';
+      a.click();
+    }
+
+    function crearNuevaHistoria() {
+      indexEdicion = null;
+      ['nombre', 'edad', 'documento', 'diagnostico', 'historial'].forEach(id => document.getElementById(id).value = '');
+      new bootstrap.Modal(document.getElementById('modal')).show();
+    }
+
+    function validarFormulario(h) {
+      if (!h.nombre.trim() || !h.documento || !h.diagnostico.trim() || !h.historial.trim()) {
+        alert('Todos los campos son obligatorios.');
+        return false;
+      }
+      if (!/^\d{10}$/.test(h.documento)) {
+        alert('El documento debe tener exactamente 10 dígitos numéricos.');
+        return false;
+      }
+      if (isNaN(h.edad) || h.edad < 0 || h.edad > 120) {
+        alert('La edad debe ser un número válido entre 0 y 120.');
+        return false;
+      }
+      return true;
+    }
+
+    function guardarCambios() {
+      const historia = {
+        nombre: document.getElementById('nombre').value.trim(),
+        edad: parseInt(document.getElementById('edad').value),
+        documento: document.getElementById('documento').value.trim(),
+        diagnostico: document.getElementById('diagnostico').value.trim(),
+        historial: document.getElementById('historial').value.trim(),
+        fecha: new Date().toISOString().split('T')[0]
+      };
+
+      if (!validarFormulario(historia)) return;
+
+      if (indexEdicion !== null) {
+        fetch(`http://localhost:3000/historias/documento/${historia.documento}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(historia)
+        }).then(() => {
+          historiasClinicas[indexEdicion] = historia;
+          mostrarPacientes();
+        });
+      } else {
+        fetch('http://localhost:3000/historias', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(historia)
+        }).then(() => {
+          historiasClinicas.push(historia);
+          mostrarPacientes();
+        });
+      }
+      bootstrap.Modal.getInstance(document.getElementById('modal')).hide();
+    }
+
+    function editarHistoria(index) {
+      const h = historiasClinicas[index];
+      document.getElementById('nombre').value = h.nombre;
+      document.getElementById('edad').value = h.edad;
+      document.getElementById('documento').value = h.documento;
+      document.getElementById('diagnostico').value = h.diagnostico;
+      document.getElementById('historial').value = h.historial;
+      indexEdicion = index;
+      new bootstrap.Modal(document.getElementById('modal')).show();
+    }
+
+    function eliminarHistoria(index) {
+      const historia = historiasClinicas[index];
+      if (confirm('¿Seguro que deseas eliminar esta historia?')) {
+        fetch(`http://localhost:3000/historias/${historia.documento}`, { method: 'DELETE' })
+        .then(res => {
+          if (res.ok) {
+            historiasClinicas.splice(index, 1);
+            mostrarPacientes();
+          } else {
+            alert('Error al eliminar en el servidor.');
+          }
+        }).catch(() => alert('No se pudo conectar al servidor.'));
+      }
+    }
+
+    fetch('http://localhost:3000/historias')
+      .then(response => response.json())
+      .then(data => {
+        historiasClinicas = data;
+        mostrarPacientes();
+      })
+      .catch(err => console.error('Error al cargar historias:', err));
+  </script>
+</body>
+</html>

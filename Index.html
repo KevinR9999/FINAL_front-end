@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Multi Rol</title>
+
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+
+    .video-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -2;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3); /* opcional: oscurece el video */
+      z-index: -1;
+    }
+
+    .login-container {
+      background: rgba(255, 255, 255, 0.05); /* máxima transparencia */
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 2.5rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      color: white;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+
+.form-select {
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.form-select option {
+  background-color: #2b2b2b;
+  color: white;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-wrapper i {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #ccc;
+  pointer-events: none;
+}
+
+    .form-control, .form-select {
+      border-radius: 0.8rem;
+      background-color: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+    }
+
+    .form-control::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .form-label {
+      font-weight: 500;
+    }
+
+    .btn-modern {
+      background-color: #2f2e7d;
+      border: none;
+      border-radius: 2rem;
+      padding: 0.6rem 1rem;
+      transition: all 0.3s ease;
+      color: white;
+    }
+
+    .btn-modern:hover {
+      background-color: #1b5e20;
+      transform: scale(1.03);
+      color: #fff;
+    }
+
+    .text-link {
+      color: #ddd;
+    }
+
+    .text-link:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    #error {
+      color: #ff6b6b;
+      font-weight: 500;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .input-group-text {
+      background: transparent;
+      border: none;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <video class="video-bg" autoplay muted loop playsinline>
+    <source src="https://media.istockphoto.com/id/1277734677/es/vídeo/experiencia-en-el-ciclo-de-atención-médica-y-servicios-de-tecnología-médica.mp4?s=mp4-640x640-is&k=20&c=GsJjkKJMLaslJP-Q5piFTTIKKw9llqrF1233xV5CxX4=" type="video/mp4">
+  </video>
+  <div class="overlay"></div>
+
+  <div class="d-flex justify-content-center align-items-center min-vh-100">
+    <div class="login-container col-11 col-sm-8 col-md-5 col-lg-4">
+      <h3 class="text-center mb-4"><i class="bi bi-person-circle me-2"></i>Iniciar Sesión</h3>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Correo</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+          <input type="email" class="form-control" id="email" placeholder="correo@ejemplo.com" />
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          <input type="password" class="form-control" id="password" placeholder="••••••••" />
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="rol" class="form-label">Rol</label>
+        <select class="form-select" id="rol">
+          <option value="">Selecciona tu rol</option>
+          <option value="paciente">Paciente</option>
+          <option value="doctor">Doctor</option>
+          <option value="administrador">Administrador</option>
+        </select>
+        </div>
+
+      <button class="btn btn-modern w-100 mt-3" onclick="login()">Entrar</button>
+
+      <p id="error" class="mt-3 text-center"></p>
+
+      <p class="mt-4 text-center">
+        <span class="text-link">¿No tienes cuenta?</span>
+        <a href="registro.html" class="fw-bold text-success text-decoration-none">Crear nueva cuenta</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const rol = document.getElementById('rol').value;
+      const errorEl = document.getElementById('error');
+
+      if (!email || !password || !rol) {
+        errorEl.textContent = "Por favor completa todos los campos.";
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:3000/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correo_electronico: email, contraseña: password, rol })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          localStorage.setItem('documento_usuario', result.usuario.documento);
+          localStorage.setItem('rol_usuario', result.usuario.rol);
+          localStorage.setItem('correo_usuario', result.usuario.correo);
+          localStorage.setItem('usuario', JSON.stringify({
+            documento: result.usuario.documento,
+            rol: result.usuario.rol,
+            correo: result.usuario.correo,
+            datos_clinicos: result.usuario.datos_clinicos || null
+          }));
+
+          const destinos = {
+            paciente: 'paciente.html',
+            doctor: 'doctor.html',
+            administrador: 'admin.html'
+          };
+
+          window.location.href = destinos[rol];
+        } else {
+          errorEl.textContent = result.mensaje || "Credenciales incorrectas.";
+        }
+      } catch (err) {
+        console.error(err);
+        errorEl.textContent = "Error al conectar con el servidor.";
+      }
+    }
+  </script>
+
+</body>
+</html>
