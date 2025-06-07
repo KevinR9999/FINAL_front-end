@@ -241,7 +241,7 @@ h1.titulo-historias {
       if (!validarFormulario(historia)) return;
 
       if (indexEdicion !== null) {
-        fetch(`http://localhost:3000/historias/documento/${historia.documento}`, {
+        fetch(`https://final-back-end-v9j3.onrender.com/historias/documento/${historia.documento}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(historia)
@@ -250,7 +250,7 @@ h1.titulo-historias {
           mostrarPacientes();
         });
       } else {
-        fetch('http://localhost:3000/historias', {
+        fetch('https://final-back-end-v9j3.onrender.com/historias', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(historia)
@@ -276,7 +276,7 @@ h1.titulo-historias {
     function eliminarHistoria(index) {
       const historia = historiasClinicas[index];
       if (confirm('¿Seguro que deseas eliminar esta historia?')) {
-        fetch(`http://localhost:3000/historias/${historia.documento}`, { method: 'DELETE' })
+        fetch(`https://final-back-end-v9j3.onrender.com/historias/${historia.documento}`, { method: 'DELETE' })
         .then(res => {
           if (res.ok) {
             historiasClinicas.splice(index, 1);
@@ -288,7 +288,7 @@ h1.titulo-historias {
       }
     }
 
-    fetch('http://localhost:3000/historias')
+    fetch('https://final-back-end-v9j3.onrender.com/historias')
       .then(response => response.json())
       .then(data => {
         historiasClinicas = data;

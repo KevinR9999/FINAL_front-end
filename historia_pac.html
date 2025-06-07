@@ -146,7 +146,7 @@
       }
 
       try {
-        const response = await fetch('http://localhost:3000/historias');
+        const response = await fetch('https://final-back-end-v9j3.onrender.com/historias');
         const historias = await response.json();
 
         const historiasPaciente = historias.filter(h => h.documento === documento);

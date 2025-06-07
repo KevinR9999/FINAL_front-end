@@ -115,7 +115,7 @@
       }
 
       try {
-        const res = await fetch(`http://localhost:3000/api/alta/${usuario.documento}`);
+        const res = await fetch(`https://final-back-end-v9j3.onrender.com/api/alta/${usuario.documento}`);
         if (!res.ok) throw new Error('Error al obtener los datos.');
 
         const paciente = await res.json();

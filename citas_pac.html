@@ -110,7 +110,7 @@
       }
 
       try {
-        const res = await fetch(`http://localhost:3000/api/citas/${usuario.documento}`);
+        const res = await fetch(`https://final-back-end-v9j3.onrender.com/api/citas/${usuario.documento}`);
         
         if (!res.ok) throw new Error(`Error de servidor: ${res.status}`);
 

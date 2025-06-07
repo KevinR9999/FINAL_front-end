@@ -173,7 +173,7 @@
     let paginaActual = 1;
 
     function mostrarCitas() {
-      fetch('http://localhost:3000/api/citas')
+      fetch('https://final-back-end-v9j3.onrender.com/api/citas')
         .then(res => res.json())
         .then(data => {
           citasMedicas = data;
@@ -277,8 +277,8 @@
       };
 
       const url = citaEditandoId
-        ? `http://localhost:3000/api/citas/${citaEditandoId}`
-        : "http://localhost:3000/api/cita";
+        ? `https://final-back-end-v9j3.onrender.com/api/citas/${citaEditandoId}`
+        : "https://final-back-end-v9j3.onrender.com/api/cita";
 
       const metodo = citaEditandoId ? "PUT" : "POST";
 
@@ -304,7 +304,7 @@
 
     function eliminarCita(no_documento) {
       if (confirm("¿Estás seguro de eliminar esta cita?")) {
-        fetch(`http://localhost:3000/api/citas/documento/${no_documento}`, { method: "DELETE" })
+        fetch(`https://final-back-end-v9j3.onrender.com/api/citas/documento/${no_documento}`, { method: "DELETE" })
           .then(res => {
             if (!res.ok) throw new Error("Error al eliminar la cita");
             mostrarCitas();

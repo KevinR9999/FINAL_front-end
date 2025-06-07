@@ -157,7 +157,7 @@
       document.getElementById('pTratamiento').textContent = tratamiento;
       document.getElementById('pIndicaciones').textContent = indicaciones;
 
-      fetch('http://localhost:3000/api/alta', {
+      fetch('https://final-back-end-v9j3.onrender.com/api/alta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, edad, fecha, documento, diagnostico, tratamiento, indicaciones })
