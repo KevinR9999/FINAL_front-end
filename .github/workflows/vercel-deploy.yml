@@ -1,0 +1,13 @@
+name:  Despliegue continuo a Vercel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  vercel-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name:  Ejecutar Webhook de Vercel
+        run: curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}
